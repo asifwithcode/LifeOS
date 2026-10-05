@@ -49,7 +49,7 @@ The first visitor creates the (only) account; set `ALLOW_REGISTRATION=true` to a
 | Script | Purpose |
 | --- | --- |
 | `npm run dev` / `build` / `start` | Develop / build / serve |
-| `npm test` | 67 domain unit tests + 18 PostgreSQL integration tests (uses `.env.test`; refuses non-test databases) |
+| `npm test` | 102 tests: domain and AI unit tests plus PostgreSQL integration tests (uses `.env.test`; refuses non-test databases) |
 | `npm run typecheck` · `npm run lint` | Static checks |
 | `npm run db:generate` | Create a migration after editing `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations |
