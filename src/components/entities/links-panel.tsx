@@ -61,12 +61,13 @@ export function LinksPanel({ source, related }: { source: { type: EntityType; id
         {related.map((r) => (
           <li key={r.relationId} className="group flex items-center gap-2 py-1 text-[13px]">
             <Link2 className="size-3.5 shrink-0 text-fg-subtle" aria-hidden />
-            <span className="w-14 shrink-0 text-[11px] text-fg-subtle">{ENTITY_LABEL[r.entityType]}</span>
-            <Link href={r.urlPath} className="min-w-0 flex-1 truncate text-fg hover:underline hover:underline-offset-2">
+            <Link href={r.urlPath} className="min-w-0 flex-1 truncate text-fg hover:underline hover:underline-offset-2" title={`${ENTITY_LABEL[r.entityType]} · ${r.title}`}>
               {r.title}
             </Link>
-            {r.relationType !== "related" ? <span className="text-[11px] text-fg-subtle">{r.direction === "incoming" && r.relationType === "mentions" ? "mentions this" : REL_LABEL[r.relationType]}</span> : null}
-            {r.ref ? <Ref>{r.ref}</Ref> : null}
+            <span className="shrink-0 text-[11px] text-fg-subtle">
+              {r.relationType === "related" ? ENTITY_LABEL[r.entityType] : r.direction === "incoming" && r.relationType === "mentions" ? `${ENTITY_LABEL[r.entityType]} · mentions this` : REL_LABEL[r.relationType]}
+            </span>
+            {r.ref ? <Ref className="shrink-0">{r.ref}</Ref> : null}
             {r.relationType !== "mentions" ? (
               <button type="button" onClick={() => remove(r.relationId)} disabled={pending} className="grid size-5 place-items-center rounded text-fg-subtle opacity-0 hover:bg-bg-muted hover:text-fg group-hover:opacity-100 focus-visible:opacity-100" aria-label={`Unlink ${r.title}`}>
                 <X className="size-3" />

@@ -105,7 +105,7 @@ separate from Postgres. Each is introduced in the phase that first needs it (see
 Rules:
 
 1. **Pages never write to the DB directly**, and never import `server/db` for mutations.
-2. **Every service function takes `userId` as its first argument** and every query filters by it.
+2. **Every service function takes an `Actor` (`{ userId, timezone, weekStartsOn }`) as its first argument** and every query filters by `actor.userId`. Client-supplied foreign IDs are verified with `assertOwned()`.
    Authorization is therefore structural: there is no code path that reads another user's row.
 3. **Every important mutation emits an activity event** through `recordEvent()` inside the same
    transaction, and re-indexes the entity for search through `indexEntity()`.

@@ -94,49 +94,52 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-/* ───────────── Base ───────────── */
+/* ───────────── Base (layered so utilities win) ───────────── */
 
-html {
-  -webkit-text-size-adjust: 100%;
-}
+@layer base {
 
-body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  line-height: 1.375rem;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
 
-::selection {
-  background: color-mix(in oklab, var(--accent) 25%, transparent);
-}
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 25%, transparent);
+  }
 
-input,
-textarea,
-select,
-button {
-  font: inherit;
-  color: inherit;
-}
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 
-.tabular {
-  font-variant-numeric: tabular-nums;
-}
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
 
-/* Scrollbars that don't shout */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Scrollbars that don't shout */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
 }
 
 /* ───────────── Motion ───────────── */

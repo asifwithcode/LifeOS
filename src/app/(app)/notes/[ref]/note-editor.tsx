@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { Check, CheckSquare, Eye, Lightbulb, Pencil, Pin, PinOff } from "lucide-react";
+import { CheckSquare, Eye, Lightbulb, Pencil, Pin, PinOff } from "lucide-react";
 import { toast } from "sonner";
 import { archiveNoteAction, deleteNoteAction, pinNoteAction, saveNoteAction } from "@/actions/notes";
 import { captureAndConvertAction } from "@/actions/inbox";
@@ -28,7 +28,7 @@ interface NoteData {
   updatedAt: string;
 }
 
-type SaveState = "saved" | "dirty" | "saving" | "error";
+type SaveState = "saved" | "saving" | "error";
 
 export function NoteEditor({
   note,
@@ -55,9 +55,12 @@ export function NoteEditor({
   const [selection, setSelection] = useState("");
   const [pending, start] = useTransition();
   const textRef = useRef<HTMLTextAreaElement>(null);
-  const firstRender = useRef(true);
+  const snapshot = JSON.stringify([title, content, collection, tags, lifeAreaId]);
+  // Last content known to be persisted; autosave only fires when the editor differs from it.
+  const [savedSnapshot, setSavedSnapshot] = useState(snapshot);
 
   const save = useCallback(async () => {
+    const sent = JSON.stringify([title, content, collection, tags, lifeAreaId]);
     setState("saving");
     const r = await saveNoteAction(note.id, {
       title: title.trim() || "Untitled note",
@@ -67,29 +70,28 @@ export function NoteEditor({
       lifeAreaId: lifeAreaId || null,
       tags: tags.split(/[,\s]+/).map((t) => t.replace(/^#/, "")).filter(Boolean),
     });
+    if (r.ok) setSavedSnapshot(sent);
     setState(r.ok ? "saved" : "error");
     if (!r.ok) toast.error(r.error);
   }, [note.id, note.pinned, title, content, collection, lifeAreaId, tags]);
 
-  // Debounced autosave while editing.
+  const dirty = snapshot !== savedSnapshot;
+
+  // Debounced autosave while there are unsaved edits.
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
-    }
-    setState("dirty");
+    if (!dirty) return;
     const t = setTimeout(() => void save(), 1200);
     return () => clearTimeout(t);
-  }, [title, content, collection, tags, lifeAreaId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [snapshot, dirty, save]);
 
   // Warn before leaving with unsaved changes.
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (state === "dirty" || state === "saving") e.preventDefault();
+      if (dirty || state === "saving") e.preventDefault();
     };
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [state]);
+  }, [dirty, state]);
 
   const convertSelection = (destination: "task" | "idea") =>
     start(async () => {
@@ -119,7 +121,7 @@ export function NoteEditor({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-[11px] text-fg-subtle" aria-live="polite">
-          {state === "saving" ? "Saving…" : state === "dirty" ? "Unsaved changes" : state === "error" ? "Couldn't save — retrying on next change" : editing ? "All changes saved" : ""}
+          {state === "saving" ? "Saving…" : state === "error" ? "Couldn't save — retrying on next change" : dirty ? "Unsaved changes" : editing ? "All changes saved" : ""}
         </span>
         <div className="flex gap-2">
           {editing ? (
@@ -239,11 +241,6 @@ export function NoteEditor({
           <LinksPanel source={{ type: "note", id: note.id }} related={others} />
         </Section>
       </div>
-      {state === "saved" && editing ? (
-        <span className="sr-only">
-          <Check /> saved
-        </span>
-      ) : null}
     </div>
   );
 }
