@@ -65,13 +65,14 @@ all sessions with a compatible unit.
 **Pace / behind-schedule** (§54) — computed for multi-day periods:
 
 ```
-elapsed_days    = days from range.start to today inclusive
 total_days      = days in range
-expected_now    = amount · elapsed_days / total_days
+full_days       = days in range strictly before today   (all days once the period has ended)
+expected_now    = amount · full_days / total_days       (a fresh period is never "behind" at 8am)
 remaining       = max(0, amount − actual)
-remaining_days  = total_days − elapsed_days + 1    (today still counts)
+remaining_days  = days from today to range.end inclusive (today still counts)
 required_per_day= remaining / remaining_days
 status          = complete  if actual ≥ amount
+                  on_track  if expected_now = 0 and actual = 0   (ahead if actual > 0)
                   ahead     if actual ≥ expected_now · 1.05
                   on_track  if actual ≥ expected_now · 0.9
                   behind    otherwise
