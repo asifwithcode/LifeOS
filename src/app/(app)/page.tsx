@@ -4,6 +4,7 @@ import { requireUser } from "@/server/auth/dal";
 import { nowMinutesOf } from "@/server/engines/actor";
 import { getDashboard } from "@/server/services/dashboard";
 import { defaultWidgets } from "@/server/services/users";
+import { getProvider } from "@/server/ai/registry";
 import { DASHBOARD_WIDGETS } from "@/lib/domain/constants";
 import { formatMinutes } from "@/lib/domain/dates";
 import { greeting, longDate, relativeDay } from "@/lib/ui/format";
@@ -216,6 +217,11 @@ export default async function DashboardPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <WidgetCustomizer widgets={widgets} />
+          {getProvider() ? (
+            <Link href="/ai" className={buttonVariants({})}>
+              <Sparkles /> Ask AI
+            </Link>
+          ) : null}
           <LogSessionButton size="md" />
           <CaptureButton variant="primary" label="Quick capture" />
         </div>

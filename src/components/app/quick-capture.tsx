@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { captureAction, captureAndConvertAction, previewCaptureAction } from "@/actions/inbox";
+import { suggestCaptureAIAction } from "@/actions/ai";
 import type { CaptureSuggestion } from "@/lib/domain/capture";
 import { ENTITY_LABEL } from "@/lib/domain/constants";
 import { Button } from "@/components/ui/button";
@@ -50,10 +51,20 @@ function CaptureBody({ initial, options, onClose }: { initial: string; options: 
     if (t.length < 3) return;
     const h = setTimeout(async () => {
       const r = await previewCaptureAction(t);
-      if (r.ok && r.data) setSuggestion(r.data);
+      if (r.ok && r.data) setSuggestion((cur) => (cur?.source === "ai" ? cur : (r.data ?? null)));
     }, 250);
     return () => clearTimeout(h);
   }, [text]);
+
+  const askAI = () =>
+    start(async () => {
+      const r = await suggestCaptureAIAction(text);
+      if (r.ok && r.data) {
+        setSuggestion(r.data);
+        setEdits(conversionFromSuggestion(r.data, text.trim(), options.today));
+      } else if (!r.ok) toast.error(r.error);
+      else toast.error("The AI couldn't classify this.");
+    });
 
   const saveToInbox = () =>
     start(async () => {
@@ -101,7 +112,7 @@ function CaptureBody({ initial, options, onClose }: { initial: string; options: 
             <Sparkles className="mt-0.5 size-3.5 shrink-0 text-accent" aria-hidden />
             <p>
               <span className="font-medium text-fg">Suggested: {ENTITY_LABEL[conversion.destination]}</span>
-              <span className="text-fg-subtle"> · by rules — {shown.reasons.join(" · ")}</span>
+              <span className="text-fg-subtle"> · {shown.source === "ai" ? `by AI (${options.ai})` : "by rules"} — {shown.reasons.join(" · ")}</span>
             </p>
           </div>
           <ConversionEditor value={conversion} onChange={setEdits} projects={options.projects} />
@@ -113,6 +124,11 @@ function CaptureBody({ initial, options, onClose }: { initial: string; options: 
           <Kbd>⌘</Kbd> <Kbd>↵</Kbd> inbox · <Kbd>⌘</Kbd> <Kbd>⇧</Kbd> <Kbd>↵</Kbd> create
         </p>
         <div className="flex gap-2">
+          {options.ai && long ? (
+            <Button variant="ghost" onClick={askAI} loading={pending} title={`Sends this text to ${options.ai}`}>
+              <Sparkles /> Ask AI
+            </Button>
+          ) : null}
           <Button onClick={saveToInbox} loading={pending} disabled={!text.trim()}>
             Save to Inbox
           </Button>

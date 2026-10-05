@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Check, Laptop, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
+import { setAiPrivacyAction } from "@/actions/ai";
 import { archiveLifeAreaAction, changePasswordAction, saveLifeAreaAction, signOutEverywhereAction, updateAppearanceAction, updateProfileAction } from "@/actions/settings";
 import { logoutAction } from "@/actions/auth";
 import { ACCENTS, AREA_COLORS } from "@/lib/domain/constants";
@@ -206,5 +207,31 @@ export function SignOutEverywhere() {
     >
       Sign out of all sessions
     </Button>
+  );
+}
+
+export function AiPrivacySettings({ privacy, modules }: { privacy: Record<string, boolean>; modules: { key: string; label: string }[] }) {
+  const [state, setState] = useState(privacy);
+  const [pending, start] = useTransition();
+  const toggle = (key: string, value: boolean) => {
+    const next = { ...state, [key]: value };
+    setState(next);
+    start(async () => {
+      const r = await setAiPrivacyAction(next);
+      if (!r.ok) {
+        toast.error(r.error);
+        setState(state);
+      }
+    });
+  };
+  return (
+    <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+      {modules.map((m) => (
+        <li key={m.key} className="flex items-center justify-between gap-3 border-b border-border py-2 text-[13px]">
+          <label htmlFor={`ai-${m.key}`} className="flex-1 cursor-pointer">{m.label}</label>
+          <input id={`ai-${m.key}`} type="checkbox" checked={!!state[m.key]} disabled={pending} onChange={(e) => toggle(m.key, e.target.checked)} className="size-4 accent-[var(--accent)]" />
+        </li>
+      ))}
+    </ul>
   );
 }

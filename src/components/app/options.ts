@@ -11,4 +11,6 @@ export interface EntityOptions {
   lifeAreas: (Option & { color: string })[];
   /** Today in the user's timezone (YYYY-MM-DD). */
   today: string;
+  /** AI provider label when configured, else null. */
+  ai: string | null;
 }

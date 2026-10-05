@@ -267,7 +267,7 @@ export async function approveAction(actor: Actor, actionId: string, editedPayloa
       });
       return createdItems;
     });
-    return { status: "executed" as const, created: result };
+    return { status: "executed" as const, created: result, summary: describeAction(v.kind, v.payload).summary };
   } catch (err) {
     const message = err instanceof DomainError ? err.message : "Execution failed";
     if (!(err instanceof DomainError)) console.error("[ai action]", err);

@@ -1,6 +1,6 @@
-# 05 — AI Architecture (Phase 2 design)
+# 05 — AI Architecture (Phase 2 — implemented)
 
-Phase 1 ships no AI calls, but its shapes (services with explicit `userId`, typed events,
+Implemented in `src/server/ai/`. Phase 1's shapes (services with explicit `userId`, typed events,
 `search_index`, Zod schemas, the inbox `suggestion` field) are what Phase 2 plugs into.
 
 Principles:
@@ -157,3 +157,22 @@ the AI something, the relevant items from the modules enabled below are sent to 
 - Services accept plain validated objects → directly reusable by the Action Engine.
 - Dashboard "Today summary" is deterministic (computed from targets) and labelled as such;
   Phase 2 may add an AI insight card beside it, never replacing the computed one.
+
+
+## 8. Implementation notes
+
+- **History is append-only.** Each message stores the exact provider transcript it appended
+  (`ai_messages.transcript`), replayed verbatim on the next turn; per-turn personal context travels
+  inside that turn's user message so the system prompt stays byte-stable (prompt caching).
+- **Read tools run, write tools propose.** `search_items` / `get_item` execute automatically and are
+  privacy-filtered; every `propose_*` tool only inserts an `ai_actions` row (`proposed`). Approval
+  claims the row (`executing`), re-validates (including any user edits), executes through the same
+  services as the UI in one transaction, and records `executed`/`failed` + an `ai.action_executed`
+  timeline event.
+- **Refs are resolved only within the user's data** via `search_index`; unknown, deleted or
+  wrong-type refs fail the proposal or the execution — never guessed.
+- **Refusals** use the API's server-side fallback (`fallbacks: "default"`); declined-model blocks
+  before a mid-output fallback marker are not echoed back.
+- **Semantic search is deferred**: Anthropic has no embeddings endpoint, so retrieval is Postgres
+  full-text until an embeddings provider is added (the `search_index` table is the single place to
+  add a `vector` column).

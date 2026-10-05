@@ -1,5 +1,8 @@
 import {
   Activity,
+  Brain,
+  Sparkles,
+  Wand2,
   BookOpen,
   CalendarClock,
   CheckSquare,
@@ -39,6 +42,14 @@ export const NAV: NavGroup[] = [
       { href: "/", label: "Dashboard", icon: Gauge, match: (p) => p === "/" },
       { href: "/today", label: "Today", icon: Sun },
       { href: "/inbox", label: "Inbox", icon: Inbox },
+    ],
+  },
+  {
+    label: "AI",
+    items: [
+      { href: "/ai", label: "Personal AI", icon: Sparkles, match: (p) => p === "/ai" },
+      { href: "/ai/planner", label: "AI Planner", icon: Wand2 },
+      { href: "/ai/memory", label: "AI Memory", icon: Brain },
     ],
   },
   {

@@ -90,11 +90,11 @@ export async function runChatTurn(actor: Actor, input: { conversationId?: string
 
   const [userRow] = await db
     .insert(aiMessages)
-    .values({ userId: actor.userId, conversationId: conv.id, role: "user", text: message, provider: provider.id, model: provider.model, contextRefs: context.refs })
+    .values({ userId: actor.userId, conversationId: conv.id, role: "user", text: message, provider: provider.id, model: provider.model })
     .returning();
   const [assistantRow] = await db
     .insert(aiMessages)
-    .values({ userId: actor.userId, conversationId: conv.id, role: "assistant", text: "", provider: provider.id, model: provider.model, status: "pending", createdAt: new Date(userRow.createdAt.getTime() + 1) })
+    .values({ userId: actor.userId, conversationId: conv.id, role: "assistant", text: "", provider: provider.id, model: provider.model, contextRefs: context.refs, status: "pending", createdAt: new Date(userRow.createdAt.getTime() + 1) })
     .returning();
 
   emit({ type: "start", conversationId: conv.id, messageId: assistantRow.id, provider: provider.label, contextRefs: context.refs.map((r) => ({ type: r.type, ref: r.ref, title: r.title })) });

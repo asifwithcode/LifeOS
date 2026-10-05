@@ -2,7 +2,10 @@ import { requireUser } from "@/server/auth/dal";
 import { listLifeAreas } from "@/server/services/users";
 import { Page, PageHeader, Section, Tabs } from "@/components/ui/layout";
 import { buttonVariants } from "@/components/ui/button";
-import { AppearanceSettings, LifeAreasSettings, PasswordForm, ProfileForm, SignOutEverywhere } from "./settings-client";
+import Link from "next/link";
+import { getProvider } from "@/server/ai/registry";
+import { PRIVACY_MODULES, resolvePrivacy } from "@/server/ai/privacy";
+import { AiPrivacySettings, AppearanceSettings, LifeAreasSettings, PasswordForm, ProfileForm, SignOutEverywhere } from "./settings-client";
 
 export const metadata = { title: "Settings" };
 
@@ -17,7 +20,7 @@ const TABS = [
 ];
 
 const ROADMAP: { phase: string; title: string; items: string[] }[] = [
-  { phase: "Phase 2", title: "AI Brain", items: ["Personal AI with modes", "Context retrieval with privacy controls", "AI Planner & smart day plan", "Typed AI actions with preview → approval", "AI Memory", "Semantic search (pgvector)", "Conversation → notes, tasks, plans"] },
+  { phase: "Phase 2 — remaining", title: "AI Brain", items: ["Semantic search (pgvector) once an embeddings provider is configured", "JSON import", "Additional AI providers (OpenAI, Gemini, local) behind the same interface"] },
   { phase: "Phase 3", title: "Learning OS", items: ["Study hub (program → subject → chapter → topic)", "Learning paths with prerequisites", "Courses & YouTube video learning with timestamped notes", "Books & reading sessions", "AI Teacher", "Flashcards with spaced repetition", "Practice lab, assessments, mistake book"] },
   { phase: "Phase 4", title: "Life management", items: ["Calendar", "Habits", "Focus mode (Pomodoro/stopwatch → sessions)", "Journal", "Future plans & scenarios", "Career center & study abroad", "Portfolio & file vault", "Reminders"] },
   { phase: "Phase 5", title: "Intelligence", items: ["Daily / weekly / monthly reviews", "Planned vs actual", "Forecasting", "Behind-schedule recommendations", "Analytics & On This Day"] },
@@ -28,6 +31,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
   const sp = await props.searchParams;
   const tab = TABS.some((t) => t.key === sp.tab) ? String(sp.tab) : "profile";
   const areas = tab === "areas" ? await listLifeAreas(user.id, true) : [];
+  const provider = getProvider();
   return (
     <Page width="narrow">
       <PageHeader title="Settings" />
@@ -64,27 +68,31 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
         </div>
       ) : null}
       {tab === "ai" ? (
-        <div className="flex flex-col gap-6">
-          <Section title="AI status">
-            <p className="text-[13px] leading-relaxed text-fg-muted">
-              No AI provider is connected and no data has been sent to any AI service. LifeOS works fully without AI — quick-capture suggestions use transparent rules that run on your server.
-            </p>
+        <div className="flex flex-col gap-8">
+          <Section title="Provider">
+            {provider ? (
+              <p className="text-[13px] leading-relaxed text-fg-muted">
+                Connected: <span className="font-medium text-fg">{provider.label}</span>. Data stays in your database; when you use an AI feature, only the relevant items from the modules allowed below are sent to this provider for that request. Every AI change is a proposal you approve, and approved actions are audited in your timeline.
+              </p>
+            ) : (
+              <p className="text-[13px] leading-relaxed text-fg-muted">
+                No provider configured — nothing is sent to any AI service. Set <code className="font-mono">ANTHROPIC_API_KEY</code> (optionally <code className="font-mono">AI_MODEL</code>) in the server environment and restart to enable the assistant. Quick-capture suggestions keep using local rules.
+              </p>
+            )}
           </Section>
-          <Section title="Privacy defaults (applied when the AI Brain ships)" description="You'll be able to change these per module before anything is sent.">
-            <ul className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px] sm:grid-cols-3">
-              {Object.entries(settings?.aiPrivacy ?? {}).map(([k, v]) => (
-                <li key={k} className="flex items-center justify-between gap-2 border-b border-border py-1">
-                  <span className="capitalize">{k}</span>
-                  <span className={v ? "text-fg-muted" : "text-fg-subtle"}>{v ? "allowed" : "off"}</span>
-                </li>
-              ))}
-            </ul>
+          <Section title="What the AI may use" description="Unchecked modules are never included in context or search results sent to the AI.">
+            <AiPrivacySettings privacy={resolvePrivacy(settings?.aiPrivacy)} modules={PRIVACY_MODULES.map((m) => ({ key: m.key, label: m.label }))} />
+          </Section>
+          <Section title="Memory">
+            <p className="text-[13px] text-fg-muted">
+              Long-term memory is {settings?.memoryEnabled ? "on" : "off"}. <Link href="/ai/memory" className="text-fg underline-offset-2 hover:underline">Manage memories</Link> — they&apos;re separate from chat history and only change when you add or approve one.
+            </p>
           </Section>
         </div>
       ) : null}
       {tab === "roadmap" ? (
         <div className="flex flex-col gap-8">
-          <p className="text-[13px] text-fg-muted">Phase 1 (Foundation) is live: Dashboard, Today, Inbox, Tasks, Goals, Targets, Routine, Ideas, Projects, Decisions, Notes, Skills, Sessions, Timeline, Search. These modules come next and will plug into the same data:</p>
+          <p className="text-[13px] text-fg-muted">Live: Phase 1 (Dashboard, Today, Inbox, Tasks, Goals, Targets, Routine, Ideas, Projects, Decisions, Notes, Skills, Sessions, Timeline, Search) and the Phase 2 AI Brain (Personal AI with modes, privacy-aware context, proposals with approval, AI Planner, AI Memory, AI capture suggestions). Coming next, on the same data:</p>
           {ROADMAP.map((r) => (
             <Section key={r.phase} title={`${r.phase} · ${r.title}`}>
               <ul className="list-disc space-y-1 pl-5 text-[13px] text-fg-muted">

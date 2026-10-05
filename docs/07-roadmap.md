@@ -31,8 +31,15 @@ real CRUD, validation and all UI states is deferred rather than stubbed.
 See the project README "Phase 1 status" table — it is updated as milestones land and states
 plainly what is not done.
 
-## Phase 2 — AI Brain
+## Phase 2 — AI Brain (largely implemented)
 
+Implemented: provider abstraction + Anthropic adapter, chat with modes, privacy-aware context, typed
+actions with approval and audit, AI Memory, AI Planner with routine adjustments, conversation →
+entity conversion, AI capture classifier. Remaining: embeddings/pgvector semantic search (needs an
+embeddings provider; Anthropic offers none), JSON import, more providers, `jobs` worker (only needed
+once embeddings exist).
+
+Original scope: 
 Provider abstraction (Anthropic default) · `jobs` worker · pgvector embeddings + hybrid search ·
 Personal AI chat with modes · Context Engine with privacy flags · typed action proposals,
 preview, approval, audit · AI Memory page · conversation → entity conversion · AI capture

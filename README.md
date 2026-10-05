@@ -9,8 +9,8 @@ Capture → Organize → Learn → Plan → Do → Track → Review → Improve
 ```
 
 Architecture, schema, route map, progress model, AI design and design system live in
-[`docs/`](docs/README.md). **Phase 1 (Foundation) is implemented**; Phases 2–5 are designed and
-listed in-app under *Settings → Roadmap*.
+[`docs/`](docs/README.md). **Phase 1 (Foundation) and most of Phase 2 (AI Brain) are implemented**;
+the rest is designed and listed in-app under *Settings → Roadmap*.
 
 ## Stack
 
@@ -36,6 +36,13 @@ npm run db:migrate
 # 4. Run
 npm run dev                     # http://localhost:3000 → create your account
 ```
+
+### Enabling AI (optional)
+
+Set `ANTHROPIC_API_KEY` in `.env` (model defaults to `claude-opus-5-5`; override with `AI_MODEL`)
+and restart. Without a key every AI surface explains how to enable it and the rest of the app is
+unaffected. `AI_PROVIDER=fake` runs a deterministic offline provider that exercises the full
+proposal/approval pipeline without calling any model (used by the tests).
 
 The first visitor creates the (only) account; set `ALLOW_REGISTRATION=true` to allow more.
 
@@ -78,7 +85,22 @@ tests/integration/   Workflow tests against a real database.
 | Notes (Markdown, autosave, collections, tags, `[[REF]]` mentions → backlinks, selection → task/idea) | Done |
 | Skills (topic roadmap, evidence-based progress, time invested, 28-day practice) | Done |
 | Activity events + timeline · Entity relations · Full-text search · Human refs · JSON/Markdown export | Done |
-| AI features, semantic search, reminders delivery, data import | Not in Phase 1 (see roadmap). No AI calls are made; quick-capture suggestions are deterministic rules. |
+
+## Phase 2 status (AI Brain)
+
+| Area | Status |
+| --- | --- |
+| Provider abstraction (`src/server/ai/types.ts`) with Anthropic adapter (streaming, refusal fallback, append-only replay) and offline test provider | Done |
+| Personal AI chat with 9 modes, conversation history (rename/archive/delete), context disclosure per answer | Done |
+| Permission-aware context engine: snapshot + full-text retrieval + memory, filtered by per-module privacy settings | Done |
+| Typed action catalog (13 kinds incl. *Save plan*), proposal → preview → edit/approve/reject → audited execution | Done |
+| AI Memory (add/edit/archive/forget, global on/off) — separate from chat history | Done |
+| AI Planner: structured day plan, server-side sanitizing, accept blocks into today only (templates untouched) | Done |
+| Conversation → note / task / memory, AI quick-capture suggestions, ⌘K “Ask AI” | Done |
+| Semantic search (pgvector) | Not done — needs an embeddings provider; search is full-text for now |
+| JSON import, additional providers (OpenAI, Gemini, local) | Not done — providers plug into `AIProvider` |
+
+Not built yet: reminder delivery (Phase 4) and the later-phase modules listed in the roadmap.
 
 ## Backups
 

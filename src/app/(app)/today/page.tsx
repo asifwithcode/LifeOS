@@ -6,6 +6,8 @@ import { getRoutineDay, listTemplates } from "@/server/services/routine";
 import { evaluateTargets } from "@/server/services/targets";
 import { listTasks, completedTasksInRange } from "@/server/services/tasks";
 import { listSessions } from "@/server/services/sessions";
+import { listAdjustments } from "@/server/services/adjustments";
+import { PlannedBlocks } from "@/components/ai/planned-blocks";
 import { todayProgress } from "@/lib/domain/progress";
 import { addDays, compareISO, formatMinutes, isISODate } from "@/lib/domain/dates";
 import { longDate, relativeDay } from "@/lib/ui/format";
@@ -30,7 +32,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
   const isToday = date === realToday;
   const isFuture = compareISO(date, realToday) > 0;
 
-  const [routine, templates, daily, dueTasks, overdue, sessions, completed] = await Promise.all([
+  const [routine, templates, daily, dueTasks, overdue, sessions, completed, planned] = await Promise.all([
     getRoutineDay(actor, date),
     listTemplates(actor.userId),
     evaluateTargets(actor, { period: "daily", today: date }),
@@ -38,6 +40,7 @@ export default async function TodayPage(props: PageProps<"/today">) {
     isToday ? listTasks(actor, { view: "overdue" }) : Promise.resolve([]),
     listSessions(actor, { from: date, to: date, limit: 50 }),
     completedTasksInRange(actor, date, date),
+    listAdjustments(actor.userId, date),
   ]);
   const progress = todayProgress(daily.map((t) => t.evaluation.percent), { done: routine.doneCount, scheduled: routine.slots.length });
   const minutes = sessions.reduce((s, r) => s + (r.session.durationMinutes ?? 0), 0);
@@ -94,6 +97,12 @@ export default async function TodayPage(props: PageProps<"/today">) {
               </EmptyState>
             )}
           </Section>
+
+          {planned.length || isToday ? (
+            <Section title="Planned for this day" description="Extra blocks for this date only (e.g. accepted AI Planner suggestions)." action={isToday ? <Link href="/ai/planner" className="text-xs text-fg-muted hover:text-fg">AI Planner</Link> : undefined}>
+              <PlannedBlocks items={planned.map((a) => ({ id: a.adj.id, title: a.adj.title, startTime: a.adj.startTime.slice(0, 5), durationMinutes: a.adj.durationMinutes, status: a.adj.status, source: a.adj.source, taskRef: a.taskRef }))} canComplete={!isFuture} />
+            </Section>
+          ) : null}
 
           {isToday ? (
             <Section title="Tasks" action={<Link href="/tasks?view=upcoming" className="text-xs text-fg-muted hover:text-fg">Upcoming</Link>}>

@@ -4,7 +4,7 @@ import { Command } from "cmdk";
 import { Dialog as D } from "radix-ui";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { CheckSquare, Compass, FileText, FolderKanban, Lightbulb, Moon, Plus, Search, Sun, Timer, Laptop, type LucideIcon } from "lucide-react";
+import { CheckSquare, Compass, FileText, FolderKanban, Lightbulb, Moon, Plus, Search, Sparkles, Sun, Timer, Laptop, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { quickNoteAction } from "@/actions/notes";
 import { updateAppearanceAction } from "@/actions/settings";
@@ -120,6 +120,12 @@ export function CommandPalette() {
                   ))}
                 </Command.Group>
               ) : null}
+
+              <Command.Group heading="Ask" className={GROUP}>
+                <Item icon={Sparkles} value={`ask ai ${query}`} onSelect={() => go(query.trim() ? `/ai?q=${encodeURIComponent(query.trim())}` : "/ai")}>
+                  {query.trim() ? `Ask AI: “${query.trim().slice(0, 60)}”` : "Ask AI"}
+                </Item>
+              </Command.Group>
 
               <Command.Group heading="Create" className={GROUP}>
                 <Item icon={Plus} shortcut="⌘J" onSelect={() => { close(); openCapture(query); }}>Quick capture</Item>

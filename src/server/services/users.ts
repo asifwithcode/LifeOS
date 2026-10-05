@@ -5,21 +5,9 @@ import { db, type Tx } from "@/server/db";
 import { lifeAreas, routineTemplates, userSettings, users, type DashboardWidgetPref } from "@/server/db/schema";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { DomainError } from "@/server/engines/errors";
+import { DEFAULT_PRIVACY } from "@/server/ai/privacy";
 
-export const DEFAULT_AI_PRIVACY = {
-  goals: true,
-  targets: true,
-  tasks: true,
-  projects: true,
-  ideas: true,
-  notes: true,
-  skills: true,
-  study: true,
-  routine: true,
-  journal: false,
-  finance: false,
-  files: false,
-};
+export const DEFAULT_AI_PRIVACY = DEFAULT_PRIVACY;
 
 export function defaultWidgets(): DashboardWidgetPref[] {
   return DASHBOARD_WIDGETS.map((w) => ({ id: w.id, visible: true }));
