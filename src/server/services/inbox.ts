@@ -5,7 +5,7 @@ import { ruleBasedClassifier, type CaptureClassifier, type CaptureSuggestion } f
 import { addDays } from "@/lib/domain/dates";
 import type { InboxConvertInput } from "@/lib/validation";
 import { db, type Tx } from "@/server/db";
-import { inboxItems, projects, type InboxItem } from "@/server/db/schema";
+import { inboxItems, projects, searchIndex, type InboxItem } from "@/server/db/schema";
 import { recordEvent } from "@/server/engines/activity";
 import { nowOf, todayOf, type Actor } from "@/server/engines/actor";
 import { DomainError, notFound } from "@/server/engines/errors";
@@ -207,12 +207,14 @@ export async function restoreInboxItem(actor: Actor, id: string) {
 }
 
 export async function listInbox(actor: Actor, status: "pending" | "processed" | "discarded" = "pending") {
-  return db
-    .select()
+  const rows = await db
+    .select({ item: inboxItems, resultRef: searchIndex.ref, resultUrl: searchIndex.urlPath, resultTitle: searchIndex.title })
     .from(inboxItems)
+    .leftJoin(searchIndex, and(eq(searchIndex.entityType, inboxItems.processedEntityType), eq(searchIndex.entityId, inboxItems.processedEntityId)))
     .where(and(eq(inboxItems.userId, actor.userId), eq(inboxItems.status, status)))
     .orderBy(desc(inboxItems.createdAt))
     .limit(status === "pending" ? 500 : 100);
+  return rows.map((r) => ({ ...r.item, result: r.resultUrl ? { ref: r.resultRef, url: r.resultUrl, title: r.resultTitle } : null }));
 }
 
 export async function inboxCount(userId: string) {

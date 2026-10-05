@@ -35,6 +35,7 @@ export const baseTask = {
 
 export const baseSession = {
   notes: null,
+  durationMinutes: null as number | null,
   startTime: null,
   quantity: null,
   unit: null,
