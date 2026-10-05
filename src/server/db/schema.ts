@@ -642,3 +642,107 @@ export type InboxItem = typeof inboxItems.$inferSelect;
 export type LifeArea = typeof lifeAreas.$inferSelect;
 export type ActivityEvent = typeof activityEvents.$inferSelect;
 export type UserSettings = typeof userSettings.$inferSelect;
+
+// ───────────────────────────── AI (Phase 2) ─────────────────────────────
+
+export const aiConversations = pgTable(
+  "ai_conversations",
+  {
+    id: id(),
+    userId: userId(),
+    title: text("title").notNull().default("New conversation"),
+    mode: text("mode").notNull().default("general"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    archivedAt: archivedAt(),
+  },
+  (t) => [index("ai_conversations_user_idx").on(t.userId, t.updatedAt.desc())],
+);
+
+export type ContextRef = { type: string; id: string; ref: string | null; title: string };
+
+export const aiMessages = pgTable(
+  "ai_messages",
+  {
+    id: id(),
+    userId: userId(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => aiConversations.id, { onDelete: "cascade" }),
+    role: text("role").notNull(), // user | assistant
+    text: text("text").notNull().default(""),
+    /** Provider-specific transcript appended by this message, replayed verbatim (append-only history). */
+    transcript: jsonb("transcript").$type<unknown[]>().notNull().default([]),
+    provider: text("provider"),
+    model: text("model"),
+    contextRefs: jsonb("context_refs").$type<ContextRef[]>().notNull().default([]),
+    status: text("status").notNull().default("complete"), // complete | error | refused
+    error: text("error"),
+    usage: jsonb("usage").$type<Record<string, unknown>>(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("ai_messages_conversation_idx").on(t.conversationId, t.createdAt)],
+);
+
+export const aiMemories = pgTable(
+  "ai_memories",
+  {
+    id: id(),
+    userId: userId(),
+    ref: ref(),
+    content: text("content").notNull(),
+    kind: text("kind").notNull().default("fact"),
+    source: text("source").notNull().default("manual"), // manual | ai_suggested
+    sourceConversationId: uuid("source_conversation_id").references(() => aiConversations.id, { onDelete: "set null" }),
+    status: text("status").notNull().default("active"), // active | archived
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("ai_memories_user_ref_uq").on(t.userId, t.ref), index("ai_memories_user_status_idx").on(t.userId, t.status)],
+);
+
+export const aiActions = pgTable(
+  "ai_actions",
+  {
+    id: id(),
+    userId: userId(),
+    ref: ref(),
+    conversationId: uuid("conversation_id").references(() => aiConversations.id, { onDelete: "set null" }),
+    messageId: uuid("message_id").references(() => aiMessages.id, { onDelete: "set null" }),
+    kind: text("kind").notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    summary: text("summary").notNull(),
+    status: text("status").notNull().default("proposed"), // proposed | executing | rejected | executed | failed
+    result: jsonb("result").$type<Record<string, unknown>>(),
+    error: text("error"),
+    createdAt: createdAt(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("ai_actions_user_ref_uq").on(t.userId, t.ref), index("ai_actions_conversation_idx").on(t.conversationId)],
+);
+
+/** Date-specific additions to the routine (e.g. accepted AI day-plan blocks). Templates are never modified. */
+export const routineAdjustments = pgTable(
+  "routine_adjustments",
+  {
+    id: id(),
+    userId: userId(),
+    date: date("date").notNull(),
+    title: text("title").notNull(),
+    startTime: time("start_time").notNull(),
+    durationMinutes: integer("duration_minutes").notNull(),
+    activityType: text("activity_type"),
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    source: text("source").notNull().default("manual"), // manual | ai
+    status: text("status").notNull().default("planned"), // planned | done | skipped
+    sessionId: uuid("session_id").references(() => workSessions.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("routine_adjustments_user_date_idx").on(t.userId, t.date), check("routine_adjustments_duration_positive", sql`${t.durationMinutes} > 0`)],
+);
+
+export type AiConversation = typeof aiConversations.$inferSelect;
+export type AiMessage = typeof aiMessages.$inferSelect;
+export type AiMemory = typeof aiMemories.$inferSelect;
+export type AiAction = typeof aiActions.$inferSelect;
+export type RoutineAdjustment = typeof routineAdjustments.$inferSelect;

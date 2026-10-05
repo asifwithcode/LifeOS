@@ -59,6 +59,13 @@ export const EVENT_TYPES = [
   "inbox.discarded",
   "entity.linked",
   "entity.unlinked",
+  "ai.action_executed",
+  "ai.action_rejected",
+  "memory.created",
+  "memory.updated",
+  "memory.archived",
+  "routine.plan_added",
+  "routine.plan_completed",
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
@@ -123,6 +130,13 @@ export const EVENT_VERB: Record<EventType, string> = {
   "inbox.discarded": "Discarded inbox item",
   "entity.linked": "Linked",
   "entity.unlinked": "Unlinked",
+  "ai.action_executed": "Approved AI action",
+  "ai.action_rejected": "Rejected AI action",
+  "memory.created": "Added memory",
+  "memory.updated": "Edited memory",
+  "memory.archived": "Archived memory",
+  "routine.plan_added": "Planned",
+  "routine.plan_completed": "Completed planned block",
 };
 
 export const EVENT_CATEGORIES: Record<string, { label: string; prefixes: string[] }> = {
@@ -132,4 +146,5 @@ export const EVENT_CATEGORIES: Record<string, { label: string; prefixes: string[
   projects: { label: "Projects & ideas", prefixes: ["project.", "idea.", "decision."] },
   knowledge: { label: "Notes & inbox", prefixes: ["note.", "inbox."] },
   skills: { label: "Skills", prefixes: ["skill."] },
+  ai: { label: "AI", prefixes: ["ai.", "memory."] },
 };

@@ -14,6 +14,8 @@ export const ENTITY_TYPES = [
   "skill",
   "session",
   "inbox_item",
+  "memory",
+  "ai_action",
 ] as const;
 export type EntityType = (typeof ENTITY_TYPES)[number];
 
@@ -30,6 +32,8 @@ export const REF_PREFIX: Record<EntityType, string> = {
   skill: "SKL",
   session: "SES",
   inbox_item: "INB",
+  memory: "MEM",
+  ai_action: "ACT",
 };
 
 export const ENTITY_LABEL: Record<EntityType, string> = {
@@ -45,6 +49,8 @@ export const ENTITY_LABEL: Record<EntityType, string> = {
   skill: "Skill",
   session: "Session",
   inbox_item: "Inbox item",
+  memory: "Memory",
+  ai_action: "AI action",
 };
 
 /** Base path for entity detail pages. Entities without their own page link to their list. */
@@ -61,6 +67,8 @@ export const ENTITY_PATH: Record<EntityType, string> = {
   skill: "/skills",
   session: "/sessions",
   inbox_item: "/inbox",
+  memory: "/ai/memory",
+  ai_action: "/ai",
 };
 
 export const ENTITIES_WITH_DETAIL_PAGE: EntityType[] = [

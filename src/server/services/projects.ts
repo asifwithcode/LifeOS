@@ -306,8 +306,8 @@ export async function setIdeaDeleted(actor: Actor, id: string, deleted: boolean)
 }
 
 /** Creates a project from an idea. The idea is kept, linked and moved to "building". */
-export async function convertIdeaToProject(actor: Actor, ideaId: string) {
-  return db.transaction(async (tx) => {
+export async function convertIdeaToProject(actor: Actor, ideaId: string, outer?: Tx) {
+  return inTx(outer, async (tx) => {
     const idea = await loadIdea(tx, actor, ideaId);
     if (idea.convertedProjectId) {
       const [existing] = await tx.select().from(projects).where(eq(projects.id, idea.convertedProjectId));
